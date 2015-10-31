@@ -10,5 +10,10 @@ https://stormy-falls-9283.herokuapp.com/ | https://git.heroku.com/stormy-falls-9
     
     virtualenv venv
     source venv/bin/activate
-    pip install requirements.txt
-    python project/app.py
+    pip install -r requirements.txt
+    ./run.sh
+
+## Caveats
+
+I'm using in browser transformation for my React components. This shouldn't be done in production, but it seemed silly to create a build pipeline for this example.
+
