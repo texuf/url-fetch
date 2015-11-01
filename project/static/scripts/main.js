@@ -10,14 +10,17 @@ var MainComponent = React.createClass({
       type: 'POST',
       data: data,
       success: function(data) {
-        console.log("success!!!")
-        //this.setState({data: {html:data.html+}})
+        console.log("success!!!", data.tagStats)
 
-        self = this;
-        
+        var self = this;
+        var tagStats = data.tagStats;
         Rainbow.color(data.html, 'html', function(highlighted_code) {
             console.log("colored!")
-            self.setState({data: {html:highlighted_code}})
+            self.setState({
+              data: {html:highlighted_code},
+              tagStats:tagStats,
+              parsing:false
+            });
         });
 
         
@@ -28,15 +31,52 @@ var MainComponent = React.createClass({
     });
   },
   getInitialState: function() {
-    return {data: {}, parsing:false};
+    return {data: {}, tagStats:{}, parsing:false};
   },
   render: function() {
+    var leftStyle={
+      width: '200px',
+      float: 'left'
+    };
+    var rightStyle={
+      marginLeft: '220px'
+    };
+    var mainStyle={
+      width: '100%',
+      overflow: 'hidden'
+    };
     return (
-      <div className="commentBox">
-        <h1>Enter a Url</h1>
-        <UrlInputForm onUrlSubmit={this.handleUrlSubmit} />
-        <HtmlDisplayView data={this.state.data} parsing={this.state.parsing} />
+      <div>
+        <div className="commentBox">
+          <h1>Enter a Url</h1>
+          <UrlInputForm onUrlSubmit={this.handleUrlSubmit} />
+        </div>
+        <div style={mainStyle}>
+          <div style={leftStyle}>
+            <TagsDisplayView  tagStats={this.state.tagStats}/>
+          </div>
+          <div style={rightStyle}> 
+            <HtmlDisplayView data={this.state.data} parsing={this.state.parsing} />
+          </div>
+        </div>
       </div>
+    );
+  }
+});
+
+var TagsDisplayView = React.createClass({
+  render:function(){
+    console.log("TAGS DISPLAY VIEW " +this.props.tagStats)
+    var self=this;
+    var tagNodes = Object.keys(this.props.tagStats).map(function(key, index){
+      return (
+          <div key={key}>{key}: {self.props.tagStats[key].length} </div>
+        )
+    });
+    return (
+        <div className="tagList">
+          {tagNodes}
+        </div>
     );
   }
 });
@@ -75,7 +115,7 @@ var UrlInputForm = React.createClass({
   render: function() {
     return (
       <form className="commentForm" onSubmit={this.handleSubmit}>
-        <input type="text" defaultValue="austinwellis.com/"  ref="url" />
+        <input type="text" defaultValue="austinwellis.com"  ref="url" />
         <input type="submit" value="Post" />
       </form>
     );

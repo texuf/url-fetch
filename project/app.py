@@ -1,3 +1,4 @@
+from collections import defaultdict
 from flask import Flask, render_template, jsonify, request
 from pymodules.errors import InvalidUsage
 import requests
@@ -14,12 +15,12 @@ def handle_invalid_usage(error):
 
 
 @app.route('/')
-def index():
+def get_index():
     return render_template('index.html')
 
 
 @app.route('/api/fetch', methods=['POST'])
-def hello():
+def api_fetch():
     #grab the data from either json or form
     data = request.json or request.form
     #check for errors
@@ -38,12 +39,35 @@ def hello():
     #parse the html
     soup = BS.BeautifulSoup(html, 'html.parser')
     html = soup.prettify()
-    soup = BS.BeautifulSoup(html, 'html.parser')
+    soup = BS.BeautifulSoup(html, 'html.parser') #soup the html again to get spaces
+    
+    stats = defaultdict(list)
+    find_tag_substrings(soup, html, stats)
 
-
-    stats = {}
     #return json
-    return jsonify(url=url, html=html, stats=stats)
+    return jsonify(url=url, html=html, tagStats=stats)
+
+
+
+def find_tag_substrings(soup, html, stats, index = 0):
+    if soup and soup.name:
+        if soup.name != "[document]":
+            #print soup.name
+            substring =  str(soup)
+            search_start = substring[0:min(4, len(substring))]
+            search_end = "\n"
+            substring_start = html.find(search_start, index)
+            if substring_start >= 0:
+                index = max(index, substring_start + 1)
+                while substring_start > 0 and html[substring_start-1] == " ":
+                    substring_start -= 1
+                substring_end = html.find(search_end, index) + len(search_end)
+                stats[soup.name].append((substring_start, substring_end))
+                #print (substring_start, substring_end)
+                #print html[substring_start:substring_end] 
+        for x in soup.contents:
+            index = find_tag_substrings(x, html, stats, index)
+    return index
 
 
 if __name__ == '__main__':
