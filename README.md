@@ -17,3 +17,10 @@ https://stormy-falls-9283.herokuapp.com/ | https://git.heroku.com/stormy-falls-9
 
 I'm using in browser transformation for my React components. This shouldn't be done in production, but it seemed silly to create a build pipeline for this example.
 
+## Tutorial Sources
+
+Flask/React dev env: https://realpython.com/blog/python/the-ultimate-flask-front-end/
+React setup: https://facebook.github.io/react/docs/getting-started.html
+React tutorial: http://facebook.github.io/react/docs/tutorial.html
+Heroku tutorial: https://devcenter.heroku.com/articles/getting-started-with-python-o
+Rainbows for html formatting: https://craig.is/making/rainbows
