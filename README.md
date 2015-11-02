@@ -2,23 +2,23 @@
 
 Fetches url, counts tags, displays tags interactively to the user
 
-## heroku deets
+### heroku deets
 
 https://stormy-falls-9283.herokuapp.com/ | https://git.heroku.com/stormy-falls-9283.git
 
-## Setup instructions
+### Setup instructions
     
     virtualenv venv
     source venv/bin/activate
     pip install -r requirements.txt
     ./run.sh
 
-## Caveats
+### Caveats
 
 * I'm using in browser transformation for my React components. This shouldn't be done in production.  
 * It doesn't work in IE because of the in browser transform
 
-## Tutorial Sources
+### Tutorial Sources
 
 * Flask/React dev env: https://realpython.com/blog/python/the-ultimate-flask-front-end/  
 * React setup: https://facebook.github.io/react/docs/getting-started.html  
