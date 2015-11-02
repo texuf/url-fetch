@@ -30,4 +30,5 @@ https://stormy-falls-9283.herokuapp.com/ | https://git.heroku.com/stormy-falls-9
 * React setup: https://facebook.github.io/react/docs/getting-started.html  
 * React tutorial: http://facebook.github.io/react/docs/tutorial.html  
 * Heroku tutorial: https://devcenter.heroku.com/articles/getting-started-with-python-o  
+* BeautifulSoup for html parsing http://www.crummy.com/software/BeautifulSoup/bs4/doc/
 * Rainbows for html formatting: https://craig.is/making/rainbows  
