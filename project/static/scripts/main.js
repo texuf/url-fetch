@@ -1,6 +1,5 @@
 /*** @jsx React.DOM */
 
-
 var MainComponent = React.createClass({
   handleUrlSubmit: function(data) {
     //this.setState({data: newComments});   
@@ -14,10 +13,18 @@ var MainComponent = React.createClass({
 
         var self = this;
         var tagStats = data.tagStats;
-        Rainbow.color(data.html, 'html', function(highlighted_code) {
+        var html = data.html;
+        self.setState({
+          originalHtml: html,
+          html: undefined,
+          tagStats:tagStats,
+          parsing:true
+        });
+        Rainbow.color(html, 'html', function(highlighted_code) {
             console.log("colored!")
             self.setState({
-              data: {html:highlighted_code},
+              originalHtml: html,
+              html: highlighted_code,
               tagStats:tagStats,
               parsing:false
             });
@@ -30,16 +37,59 @@ var MainComponent = React.createClass({
       }.bind(this)
     });
   },
+  colorSubstrings: function(self, tagStat, i, startIndex, html, allHtmls, highlight){
+    //console.log("color!!!", tagStat, i, startIndex)
+    
+      self.setState({
+            originalHtml: self.state.originalHtml,
+            html: allHtmls.join(""),
+            tagStats:self.state.tagStats,
+            parsing:false
+          });
+    if(startIndex == html.length)
+    {
+      return;
+    }
+    var endIndex = 
+      (i == tagStat.length)
+      ? html.length
+      : (highlight)
+        ? tagStat[i][1]
+        : tagStat[i][0];
+    
+    var substring = html.substring(startIndex, endIndex);
+    Rainbow.color(substring, 'html', function(highlighted_code) {
+        if(highlight)
+        {
+          allHtmls.push('<span class="highlight">'+highlighted_code+'</span>');
+          self.colorSubstrings(self, tagStat, i+1, endIndex, html, allHtmls, false);
+        }
+        else
+        {
+          allHtmls.push(highlighted_code);
+          self.colorSubstrings(self, tagStat, i, endIndex, html, allHtmls, true);
+        }
+    });
+  },
+  handleTagClick: function(tag){
+    var tagStat = this.state.tagStats[tag];
+    var html = this.state.originalHtml;
+    console.log("handle tag click!" +tag+" : "+tagStat)
+    var start_index = 0;
+    var allHtmls = [];
+    this.colorSubstrings(this, tagStat, 0, 0, html, [], false);
+  },
   getInitialState: function() {
-    return {data: {}, tagStats:{}, parsing:false};
+    return {html: undefined, tagStats:{}, parsing:false};
   },
   render: function() {
     var leftStyle={
       width: '200px',
-      float: 'left'
+      float: 'left',
+      marginTop: '12px'
     };
     var rightStyle={
-      marginLeft: '220px'
+      marginLeft: '210px'
     };
     var mainStyle={
       width: '100%',
@@ -53,10 +103,10 @@ var MainComponent = React.createClass({
         </div>
         <div style={mainStyle}>
           <div style={leftStyle}>
-            <TagsDisplayView  tagStats={this.state.tagStats}/>
+            <TagsDisplayView  tagStats={this.state.tagStats}  onTagClick={this.handleTagClick} parent={this}/>
           </div>
           <div style={rightStyle}> 
-            <HtmlDisplayView data={this.state.data} parsing={this.state.parsing} />
+            <HtmlDisplayView html={this.state.html} parsing={this.state.parsing}/>
           </div>
         </div>
       </div>
@@ -65,15 +115,30 @@ var MainComponent = React.createClass({
 });
 
 var TagsDisplayView = React.createClass({
+  handleClick: function(event) {
+    console.log("handle click "+event)
+  },
   render:function(){
     console.log("TAGS DISPLAY VIEW " +this.props.tagStats)
     var self=this;
+    var tagStyle = {
+      width:'100%',
+      marginBottom: '2px'
+    };
+    var buttonStyle = {
+      width:'100%'
+    };
     var tagNodes = Object.keys(this.props.tagStats).map(function(key, index){
       return (
-          <div key={key}>{key}: {self.props.tagStats[key].length} </div>
+          <div key={key} style={tagStyle}>
+            <button style={buttonStyle} selected={true} onClick={self.props.onTagClick.bind(self.props.parent, key)}>
+              {key} ({self.props.tagStats[key].length}) 
+            </button>
+          </div>
         )
     });
     return (
+
         <div className="tagList">
           {tagNodes}
         </div>
@@ -83,16 +148,15 @@ var TagsDisplayView = React.createClass({
 
 var HtmlDisplayView = React.createClass({
   createMarkup: function(html){
-    //'<span class="highlight">'+
-    //+'</span>'
+    
     return {__html:html}
   },
   render: function(){
-    var data = this.props.data;
-    if(data.html)
+    var html = this.props.html;
+    if(html)
     {
       return (
-        <pre><div dangerouslySetInnerHTML={this.createMarkup(data.html)} /></pre>
+        <pre><div dangerouslySetInnerHTML={this.createMarkup(html)} /></pre>
         );
     }
     else
