@@ -3,6 +3,9 @@ from flask import Flask, render_template, jsonify, request
 from pymodules.errors import InvalidUsage
 import requests
 import bs4 as BS
+#import logging
+#from logging.handlers import RotatingFileHandler
+
 
 app = Flask(__name__)
 
@@ -32,6 +35,7 @@ def api_fetch():
     url = data['url']
     if not '://' in url:
         url = 'http://%s' % url
+    app.logger.info("URL: %s", url)
     #make the request
     resp = requests.get(url)
     #get the html
