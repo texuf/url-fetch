@@ -179,7 +179,7 @@ var UrlInputForm = React.createClass({
   render: function() {
     return (
       <form className="commentForm" onSubmit={this.handleSubmit}>
-        <input type="text" defaultValue="austinwellis.com"  ref="url" />
+        <input type="text" defaultValue="slack.com"  ref="url" />
         <input type="submit" value="Post" />
       </form>
     );
