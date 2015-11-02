@@ -6,6 +6,12 @@ Fetches url, counts tags, displays tags interactively to the user
 
 https://stormy-falls-9283.herokuapp.com/ | https://git.heroku.com/stormy-falls-9283.git
 
+### Prerequisites
+
+* python
+* pip http://pip.readthedocs.org/en/stable/installing/
+* virtualenv http://docs.python-guide.org/en/latest/dev/virtualenvs/
+
 ### Setup instructions
     
     virtualenv venv
