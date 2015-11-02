@@ -3,12 +3,16 @@ from flask import Flask, render_template, jsonify, request
 from pymodules.errors import InvalidUsage
 import requests
 import bs4 as BS
-#import logging
-#from logging.handlers import RotatingFileHandler
+import logging
 
 
 app = Flask(__name__)
-
+log_handler = logging.StreamHandler()
+log_handler.setFormatter(logging.Formatter(
+    '%(asctime)s %(levelname)s: %(message)s '
+    '[in %(pathname)s:%(lineno)d]'))
+app.logger.addHandler(log_handler)
+app.logger.setLevel(logging.DEBUG)
 
 @app.errorhandler(InvalidUsage)
 def handle_invalid_usage(error):
