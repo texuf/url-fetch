@@ -16,6 +16,7 @@ https://stormy-falls-9283.herokuapp.com/ | https://git.heroku.com/stormy-falls-9
 ## Caveats
 
 I'm using in browser transformation for my React components. This shouldn't be done in production, but it seemed silly to create a build pipeline for this example.
+It doesn't work in IE because of the in browser transform
 
 ## Tutorial Sources
 
