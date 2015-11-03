@@ -1,8 +1,16 @@
 /*** @jsx React.DOM */
 
+var AppState = {
+  None:0,
+  Fetching:1,
+  Parsing:2,
+  Error:3
+};
+
+
 var MainComponent = React.createClass({
   handleUrlSubmit: function(data) {
-    this.setState({fetching: true});   
+    this.setState({appState: AppState.Fetching});   
     $.ajax({
       url: this.props.url,
       dataType: 'json',
@@ -16,25 +24,21 @@ var MainComponent = React.createClass({
           originalHtml: html,
           html: undefined,
           tagStats:tagStats,
-          parsing:true,
-          fetching:false,
-          error:false,
+          appState:AppState.Parsing,
         });
         Rainbow.color(html, 'html', function(highlighted_code) {
             self.setState({
               originalHtml: html,
               html: highlighted_code,
               tagStats:tagStats,
-              parsing:false
+              appState:AppState.None,
             });
         });
       }.bind(this),
       error: function(xhr, status, err) {
         console.error(this.props.url, status, err.toString());
         this.setState({
-          error: true,
-          parsing:false,
-          fetching:false,
+          appState:AppState.Error,
           html: undefined,
           tagStats:{},
         });
@@ -43,11 +47,11 @@ var MainComponent = React.createClass({
   },
   colorSubstrings: function(self, tagStat, i, startIndex, html, allHtmls, highlight){
     self.setState({
-          originalHtml: self.state.originalHtml,
-          html: allHtmls.join(""),
-          tagStats:self.state.tagStats,
-          parsing:(startIndex < html.length)
-        });
+      originalHtml: self.state.originalHtml,
+      html: allHtmls.join(""),
+      tagStats:self.state.tagStats,
+      appState:(startIndex < html.length) ? AppState.Parsing : AppState.None,
+    });
     if(startIndex == html.length)
       return;
     var endIndex = (i == tagStat.length)
@@ -60,44 +64,44 @@ var MainComponent = React.createClass({
         if(highlight)
         {
           allHtmls.push('<span class="highlight">'+highlighted_code+'</span>');
-          self.colorSubstrings(self, tagStat, i+1, endIndex, html, allHtmls, false);
+          i=i+1;
         }
         else
         {
           allHtmls.push(highlighted_code);
-          self.colorSubstrings(self, tagStat, i, endIndex, html, allHtmls, true);
         }
+        self.colorSubstrings(self, tagStat, i, endIndex, html, allHtmls, !highlight);
     });
   },
   handleTagClick: function(tag){
     this.colorSubstrings(this, this.state.tagStats[tag], 0, 0, this.state.originalHtml, [], false);
   },
   getInitialState: function() {
-    return {html: "", tagStats:{}, parsing:false, fetching:false};
+    return {
+      html: "", 
+      tagStats:{}, 
+      appState:AppState.None,
+    };
   },
   render: function() {
     return (
       <div>
         <div className="headerContainer">
           <UrlInputForm onUrlSubmit={this.handleUrlSubmit} 
-            parsing={this.state.parsing} 
-            fetching={this.state.fetching} />
-          <StatusView 
-            parsing={this.state.parsing} 
-            fetching={this.state.fetching}
-            error={this.state.error}/>
+            appState={this.state.appState} />
+          <StatusContainer appState={this.state.appState}/>
         </div>
         <div className="mainContainer">
           <div className="leftColumn">
-            <TagsDisplayView  
+            <TagsContainer  
               tagStats={this.state.tagStats}  
-              parsing={this.state.parsing}
+              appState={this.state.appState}
               onTagClick={this.handleTagClick} 
               parent={this}/>
           </div>
           <div className="rightColumn"> 
-            <HtmlDisplayView html={this.state.html} />
-            <BearView parsing={this.state.parsing} />
+            <HtmlContainer html={this.state.html} />
+            <LoadingIcon appState={this.state.appState} />
           </div>
         </div>
       </div>
@@ -105,7 +109,7 @@ var MainComponent = React.createClass({
   }
 });
 
-var TagsDisplayView = React.createClass({
+var TagsContainer = React.createClass({
   render:function(){
     var self=this;
     var tagNodes = Object.keys(this.props.tagStats).map(function(key, index){
@@ -114,7 +118,7 @@ var TagsDisplayView = React.createClass({
             <button 
               className="tagButton" 
               onClick={self.props.onTagClick.bind(self.props.parent, key)}
-              disabled={self.props.parsing}>
+              disabled={self.props.appState == AppState.Parsing}>
               {key} ({self.props.tagStats[key].length}) 
             </button>
           </div>
@@ -128,32 +132,32 @@ var TagsDisplayView = React.createClass({
   }
 });
 
-var StatusView = React.createClass({
-  getStatus: function(props){
-    if(props.parsing)
+var StatusContainer = React.createClass({
+  getStatus: function(appState){
+    if(appState == AppState.Parsing)
       return "parsing markup...";
-    else if(props.fetching)
+    else if(appState == AppState.Fetching)
       return "fetching url...";
-    else if(props.error)
+    else if(appState == AppState.Error)
       return "error fetching url...";
     else
       return "";
   },
   render: function(){
-    return (<div className="statusContainer">{this.getStatus(this.props)}</div>);
+    return (<div className="statusContainer">{this.getStatus(this.props.appState)}</div>);
   }
 });
 
-var BearView = React.createClass({
+var LoadingIcon = React.createClass({
   render: function(){
-    if(this.props.parsing)
+    if(this.props.appState == AppState.Parsing)
       return (<div className="bearContainer"><img width="172" height="100" src="/static/images/bear.gif"/> </div>)
     else
       return (<div/>)
   }
 });
 
-var HtmlDisplayView = React.createClass({
+var HtmlContainer = React.createClass({
   createMarkup: function(html){
     return {__html:html}
   },
@@ -179,15 +183,12 @@ var UrlInputForm = React.createClass({
     return (
       <form className="urlForm" onSubmit={this.handleSubmit}>
         <input type="text" defaultValue="slack.com"  ref="url" />
-        <input type="submit" value="Fetch URL" disabled={this.props.parsing || this.props.fetching} />
+        <input type="submit" 
+          value="Fetch URL" 
+          disabled={ this.props.appState == AppState.Parsing 
+                     || this.props.appState == AppState.Fetching} />
       </form>
     );
-  }
-});
-
-var helloWorld = React.createClass({
-  render: function() {
-    return (<h2>Greetings, from Real Python!</h2>)
   }
 });
 
