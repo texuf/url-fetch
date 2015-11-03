@@ -41,7 +41,11 @@ def api_fetch():
         url = 'http://%s' % url
     app.logger.info("URL: %s", url)
     #make the request
-    resp = requests.get(url)
+    try:
+        resp = requests.get(url)
+    except requests.ConnectionError as exception:
+        raise InvalidUsage("The request failed with the exception: %s" % 
+            str(exception), 404)
     #get the html
     html = resp.text
     #parse the html
