@@ -9,28 +9,36 @@ var AppState = {
 
 
 var MainComponent = React.createClass({
+  getInitialState: function() {
+    return {
+      originalHtml: "",
+      html: "", 
+      tagStats:{}, 
+      appState:AppState.None,
+    };
+  },
   handleUrlSubmit: function(data) {
-    this.setState({appState: AppState.Fetching});   
+    this.setState({
+      html: "",
+      originalHtml:"",
+      tagStats:{},
+      appState: AppState.Fetching
+    });   
     $.ajax({
       url: this.props.url,
       dataType: 'json',
       type: 'POST',
       data: data,
       success: function(data) {
-        var self = this,
-            tagStats = data.tagStats,
-            html = data.html;
-        self.setState({
-          originalHtml: html,
-          html: undefined,
-          tagStats:tagStats,
+        this.setState({
+          originalHtml: data.html,
+          tagStats:data.tagStats,
           appState:AppState.Parsing,
         });
-        Rainbow.color(html, 'html', function(highlighted_code) {
+        var self = this;
+        Rainbow.color(data.html, 'html', function(highlighted_code) {
             self.setState({
-              originalHtml: html,
               html: highlighted_code,
-              tagStats:tagStats,
               appState:AppState.None,
             });
         });
@@ -38,50 +46,48 @@ var MainComponent = React.createClass({
       error: function(xhr, status, err) {
         console.error(this.props.url, status, err.toString());
         this.setState({
-          appState:AppState.Error,
-          html: undefined,
-          tagStats:{},
+          appState:AppState.Error
         });
       }.bind(this)
     });
   },
-  colorSubstrings: function(self, tagStat, i, startIndex, html, allHtmls, highlight){
-    self.setState({
-      originalHtml: self.state.originalHtml,
-      html: allHtmls.join(""),
-      tagStats:self.state.tagStats,
-      appState:(startIndex < html.length) ? AppState.Parsing : AppState.None,
-    });
-    if(startIndex == html.length)
+  colorSubstrings: function(self, tagTuples, i=0, startIndex=0, new_html="", highlight=false){
+    if(startIndex >= self.state.originalHtml.length)
+    {
+      self.setState({
+        appState:AppState.None,
+        html:new_html
+      });
+      //Recursive End condition
       return;
-    var endIndex = (i == tagStat.length)
-                    ? html.length
+    }
+    
+    self.setState({
+      appState:AppState.Parsing,
+      html:new_html
+    });
+  
+    var endIndex = (i == tagTuples.length)
+                    ? self.state.originalHtml.length
                     : (highlight)
-                      ? tagStat[i][1]
-                      : tagStat[i][0],
-       substring = html.substring(startIndex, endIndex);
+                      ? tagTuples[i][1]
+                      : tagTuples[i][0],
+       substring = self.state.originalHtml.substring(startIndex, endIndex);
     Rainbow.color(substring, 'html', function(highlighted_code) {
         if(highlight)
         {
-          allHtmls.push('<span class="highlight">'+highlighted_code+'</span>');
+          new_html += '<span class="highlight">'+highlighted_code+'</span>';
           i=i+1;
         }
         else
         {
-          allHtmls.push(highlighted_code);
+          new_html += highlighted_code
         }
-        self.colorSubstrings(self, tagStat, i, endIndex, html, allHtmls, !highlight);
+        self.colorSubstrings(self, tagTuples, i, endIndex, new_html, !highlight);
     });
   },
   handleTagClick: function(tag){
-    this.colorSubstrings(this, this.state.tagStats[tag], 0, 0, this.state.originalHtml, [], false);
-  },
-  getInitialState: function() {
-    return {
-      html: "", 
-      tagStats:{}, 
-      appState:AppState.None,
-    };
+    this.colorSubstrings(this, this.state.tagStats[tag]);
   },
   render: function() {
     return (
