@@ -51,7 +51,7 @@ var MainComponent = React.createClass({
       }.bind(this)
     });
   },
-  colorSubstrings: function(self, tagTuples, i=0, startIndex=0, new_html="", highlight=false){
+  colorSubstrings: function(self, tagTuples, i, startIndex, new_html, highlight){
     if(startIndex >= self.state.originalHtml.length)
     {
       self.setState({
@@ -87,7 +87,7 @@ var MainComponent = React.createClass({
     });
   },
   handleTagClick: function(tag){
-    this.colorSubstrings(this, this.state.tagStats[tag]);
+    this.colorSubstrings(this, this.state.tagStats[tag], 0, 0, "", false);
   },
   render: function() {
     return (
